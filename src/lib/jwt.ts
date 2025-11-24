@@ -5,11 +5,11 @@
  * npm install jsonwebtoken @types/jsonwebtoken
  */
 
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 
 // JWT Secret (ควรเก็บใน .env)
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
-const JWT_EXPIRES_IN: string | number = process.env.JWT_EXPIRES_IN || '7d'; // 7 วัน
+const JWT_SECRET: string = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
+const JWT_EXPIRES_IN: number | `${number}${'ms' | 's' | 'm' | 'h' | 'd' | 'w' | 'y'}` = (process.env.JWT_EXPIRES_IN || '7d') as any; // 7 วัน
 
 export interface JWTPayload {
     userId: string;
@@ -21,9 +21,10 @@ export interface JWTPayload {
  * สร้าง JWT token
  */
 export function generateToken(payload: JWTPayload): string {
-    return jwt.sign(payload, JWT_SECRET, {
+    const options: SignOptions = {
         expiresIn: JWT_EXPIRES_IN,
-    });
+    };
+    return jwt.sign(payload, JWT_SECRET, options);
 }
 
 /**
@@ -43,9 +44,10 @@ export function verifyToken(token: string): JWTPayload | null {
  * สร้าง refresh token (อายุยาวกว่า access token)
  */
 export function generateRefreshToken(payload: JWTPayload): string {
-    return jwt.sign(payload, JWT_SECRET, {
+    const options: SignOptions = {
         expiresIn: '30d', // 30 วัน
-    });
+    };
+    return jwt.sign(payload, JWT_SECRET, options);
 }
 
 /**

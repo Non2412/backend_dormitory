@@ -6,9 +6,28 @@ import { successResponse, serverErrorResponse } from '@/lib/response';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || '30'; // จำนวนวันย้อนหลัง (default 30 วัน)
+    const period = searchParams.get('period') || 'month';
 
-    const days = parseInt(period);
+    // แปลง period เป็นจำนวนวัน
+    let days: number;
+    switch (period.toLowerCase()) {
+      case 'day':
+        days = 1;
+        break;
+      case 'week':
+        days = 7;
+        break;
+      case 'month':
+        days = 30;
+        break;
+      case 'year':
+        days = 365;
+        break;
+      default:
+        // ถ้าเป็นตัวเลข ให้ใช้ตัวเลขนั้น
+        days = parseInt(period) || 30;
+    }
+
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -68,7 +87,7 @@ export async function GET(request: NextRequest) {
 
     // จัดกลุ่มการจองตามวัน
     const dailyBookingsMap = new Map<string, number>();
-    allBookingsInPeriod.forEach((booking) => {
+    allBookingsInPeriod.forEach((booking: any) => {
       const dateKey = booking.createdAt.toISOString().split('T')[0];
       dailyBookingsMap.set(dateKey, (dailyBookingsMap.get(dateKey) || 0) + 1);
     });

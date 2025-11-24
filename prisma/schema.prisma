@@ -7,6 +7,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 // โมเดลผู้ใช้งาน
@@ -17,18 +18,12 @@ model User {
   firstName String
   lastName  String
   phone     String?
-  role      UserRole @default(STUDENT)
+  role      String @default("STUDENT")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   bookings  Booking[]
   payments  Payment[]
-}
-
-enum UserRole {
-  STUDENT
-  ADMIN
-  STAFF
 }
 
 // โมเดลหอพัก
@@ -50,11 +45,11 @@ model Room {
   id           String     @id @default(cuid())
   roomNumber   String
   dormitoryId  String
-  type         RoomType
+  type         String
   capacity     Int
   price        Float
   floor        Int
-  status       RoomStatus @default(AVAILABLE)
+  status       String @default("AVAILABLE")
   description  String?
   imageUrl     String?
   createdAt    DateTime   @default(now())
@@ -66,20 +61,6 @@ model Room {
   @@unique([dormitoryId, roomNumber])
 }
 
-enum RoomType {
-  SINGLE
-  DOUBLE
-  TRIPLE
-  QUAD
-}
-
-enum RoomStatus {
-  AVAILABLE
-  OCCUPIED
-  MAINTENANCE
-  RESERVED
-}
-
 // โมเดลการจองห้อง
 model Booking {
   id          String        @id @default(cuid())
@@ -87,7 +68,7 @@ model Booking {
   roomId      String
   startDate   DateTime
   endDate     DateTime?
-  status      BookingStatus @default(PENDING)
+  status      String @default("PENDING")
   totalAmount Float
   notes       String?
   createdAt   DateTime      @default(now())
@@ -98,13 +79,6 @@ model Booking {
   payments    Payment[]
 }
 
-enum BookingStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  COMPLETED
-}
-
 // โมเดลการชำระเงิน
 model Payment {
   id            String        @id @default(cuid())
@@ -112,8 +86,8 @@ model Payment {
   userId        String
   amount        Float
   paymentDate   DateTime      @default(now())
-  paymentMethod PaymentMethod
-  status        PaymentStatus @default(PENDING)
+  paymentMethod String
+  status        String @default("PENDING")
   slipUrl       String?       // URL ของสลิปการโอนเงิน
   notes         String?
   createdAt     DateTime      @default(now())
@@ -121,18 +95,4 @@ model Payment {
   
   booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-enum PaymentMethod {
-  CASH
-  BANK_TRANSFER
-  CREDIT_CARD
-  PROMPTPAY
-}
-
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
 }

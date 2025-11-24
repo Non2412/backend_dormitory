@@ -89,7 +89,7 @@ export const createPaymentSchema = z.object({
   amount: z.number().positive('ยอดเงินต้องเป็นจำนวนบวก'),
   paymentMethod: z.enum(['CASH', 'BANK_TRANSFER', 'CREDIT_CARD', 'PROMPTPAY']),
   status: z.enum(['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED']).optional(),
-  slipUrl: z.string().url('URL สลิปไม่ถูกต้อง').optional(),
+  slipUrl: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -97,6 +97,6 @@ export const updatePaymentSchema = z.object({
   amount: z.number().positive('ยอดเงินต้องเป็นจำนวนบวก').optional(),
   paymentMethod: z.enum(['CASH', 'BANK_TRANSFER', 'CREDIT_CARD', 'PROMPTPAY']).optional(),
   status: z.enum(['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED']).optional(),
-  slipUrl: z.string().url('URL สลิปไม่ถูกต้อง').optional(),
+  slipUrl: z.string().optional(),
   notes: z.string().optional(),
 });

@@ -84,7 +84,18 @@ model Payment {
   id            String        @id @default(cuid())
   bookingId     String
   userId        String
-  amount        Float
+  amount        Float         // ยอดรวมทั้งหมด
+  
+  // รายละเอียดค่าใช้จ่าย
+  rentAmount    Float?        // ค่าเช่า
+  waterAmount   Float?        // ค่าน้ำ
+  electricAmount Float?       // ค่าไฟ
+  otherAmount   Float?        // ค่าอื่นๆ (ค่าส่วนกลาง, ค่าขยะ, etc.)
+  
+  // ข้อมูลการใช้งาน (optional)
+  waterUsage    Float?        // หน่วยน้ำที่ใช้
+  electricUsage Float?        // หน่วยไฟที่ใช้
+  
   paymentDate   DateTime      @default(now())
   paymentMethod String
   status        String @default("PENDING")

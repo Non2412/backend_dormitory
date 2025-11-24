@@ -81,7 +81,21 @@ export async function POST(request: NextRequest) {
       return errorResponse(validation.error.issues[0].message);
     }
 
-    const { bookingId, userId, amount, paymentMethod, status, slipUrl, notes } = validation.data;
+    const {
+      bookingId,
+      userId,
+      amount,
+      rentAmount,
+      waterAmount,
+      electricAmount,
+      otherAmount,
+      waterUsage,
+      electricUsage,
+      paymentMethod,
+      status,
+      slipUrl,
+      notes
+    } = validation.data;
 
     // ตรวจสอบว่าการจองมีอยู่จริง
     const booking = await prisma.booking.findUnique({
@@ -106,6 +120,12 @@ export async function POST(request: NextRequest) {
         bookingId,
         userId,
         amount,
+        rentAmount,
+        waterAmount,
+        electricAmount,
+        otherAmount,
+        waterUsage,
+        electricUsage,
         paymentMethod,
         status: status || 'PENDING',
         slipUrl,

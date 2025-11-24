@@ -87,6 +87,17 @@ export const createPaymentSchema = z.object({
   bookingId: z.string().min(1, 'กรุณาระบุการจอง'),
   userId: z.string().min(1, 'กรุณาระบุผู้ใช้'),
   amount: z.number().positive('ยอดเงินต้องเป็นจำนวนบวก'),
+
+  // รายละเอียดค่าใช้จ่าย
+  rentAmount: z.number().nonnegative('ค่าเช่าต้องเป็นจำนวนบวกหรือศูนย์').optional(),
+  waterAmount: z.number().nonnegative('ค่าน้ำต้องเป็นจำนวนบวกหรือศูนย์').optional(),
+  electricAmount: z.number().nonnegative('ค่าไฟต้องเป็นจำนวนบวกหรือศูนย์').optional(),
+  otherAmount: z.number().nonnegative('ค่าอื่นๆ ต้องเป็นจำนวนบวกหรือศูนย์').optional(),
+
+  // ข้อมูลการใช้งาน
+  waterUsage: z.number().nonnegative('หน่วยน้ำต้องเป็นจำนวนบวกหรือศูนย์').optional(),
+  electricUsage: z.number().nonnegative('หน่วยไฟต้องเป็นจำนวนบวกหรือศูนย์').optional(),
+
   paymentMethod: z.enum(['CASH', 'BANK_TRANSFER', 'CREDIT_CARD', 'PROMPTPAY']),
   status: z.enum(['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED']).optional(),
   slipUrl: z.string().optional(),
@@ -95,6 +106,17 @@ export const createPaymentSchema = z.object({
 
 export const updatePaymentSchema = z.object({
   amount: z.number().positive('ยอดเงินต้องเป็นจำนวนบวก').optional(),
+
+  // รายละเอียดค่าใช้จ่าย
+  rentAmount: z.number().nonnegative('ค่าเช่าต้องเป็นจำนวนบวกหรือศูนย์').optional(),
+  waterAmount: z.number().nonnegative('ค่าน้ำต้องเป็นจำนวนบวกหรือศูนย์').optional(),
+  electricAmount: z.number().nonnegative('ค่าไฟต้องเป็นจำนวนบวกหรือศูนย์').optional(),
+  otherAmount: z.number().nonnegative('ค่าอื่นๆ ต้องเป็นจำนวนบวกหรือศูนย์').optional(),
+
+  // ข้อมูลการใช้งาน
+  waterUsage: z.number().nonnegative('หน่วยน้ำต้องเป็นจำนวนบวกหรือศูนย์').optional(),
+  electricUsage: z.number().nonnegative('หน่วยไฟต้องเป็นจำนวนบวกหรือศูนย์').optional(),
+
   paymentMethod: z.enum(['CASH', 'BANK_TRANSFER', 'CREDIT_CARD', 'PROMPTPAY']).optional(),
   status: z.enum(['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED']).optional(),
   slipUrl: z.string().optional(),

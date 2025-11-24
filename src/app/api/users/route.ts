@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse, notFoundResponse, serverErrorResponse, paginatedResponse } from '@/lib/response';
 import { hashPassword, excludePassword } from '@/lib/auth';
@@ -15,17 +16,17 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where: any = {};
-    
+    const where: Prisma.UserWhereInput = {};
+
     if (role) {
-      where.role = role;
+      where.role = role as any;
     }
-    
+
     if (search) {
       where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search } },
+        { firstName: { contains: search } },
+        { lastName: { contains: search } },
       ];
     }
 
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     const validation = createUserSchema.safeParse(body);
     if (!validation.success) {
       return errorResponse(validation.error.issues[0].message);

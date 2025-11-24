@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse, notFoundResponse, serverErrorResponse, paginatedResponse } from '@/lib/response';
 import { createBookingSchema } from '@/lib/validation';
@@ -15,18 +16,18 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where: any = {};
-    
+    const where: Prisma.BookingWhereInput = {};
+
     if (userId) {
       where.userId = userId;
     }
-    
+
     if (roomId) {
       where.roomId = roomId;
     }
-    
+
     if (status) {
-      where.status = status;
+      where.status = status as any;
     }
 
     const [bookings, total] = await Promise.all([
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     const validation = createBookingSchema.safeParse(body);
     if (!validation.success) {
       return errorResponse(validation.error.issues[0].message);
@@ -104,39 +105,44 @@ export async function POST(request: NextRequest) {
       return errorResponse('ห้องพักนี้ไม่ว่างในขณะนี้', 400);
     }
 
-    // สร้างการจอง
-    const booking = await prisma.booking.create({
-      data: {
-        userId,
-        roomId,
-        startDate: new Date(startDate),
-        endDate: endDate ? new Date(endDate) : null,
-        totalAmount,
-        notes,
-        status: 'PENDING',
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            phone: true,
+    // สร้างการจองและอัปเดตสถานะห้องพักใน transaction
+    const booking = await prisma.$transaction(async (tx) => {
+      // สร้างการจอง
+      const newBooking = await tx.booking.create({
+        data: {
+          userId,
+          roomId,
+          startDate: new Date(startDate),
+          endDate: endDate ? new Date(endDate) : null,
+          totalAmount,
+          notes,
+          status: 'PENDING',
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              phone: true,
+            },
+          },
+          room: {
+            include: {
+              dormitory: true,
+            },
           },
         },
-        room: {
-          include: {
-            dormitory: true,
-          },
-        },
-      },
-    });
+      });
 
-    // อัปเดตสถานะห้องพักเป็น RESERVED
-    await prisma.room.update({
-      where: { id: roomId },
-      data: { status: 'RESERVED' },
+      // อัปเดตสถานะห้องพักเป็น RESERVED
+      await tx.room.update({
+        where: { id: roomId },
+        data: { status: 'RESERVED' },
+      });
+
+      return newBooking;
     });
 
     return successResponse(booking, 'สร้างการจองสำเร็จ', 201);

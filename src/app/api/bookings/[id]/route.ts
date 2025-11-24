@@ -52,7 +52,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    
+
     const validation = updateBookingSchema.safeParse(body);
     if (!validation.success) {
       return errorResponse(validation.error.issues[0].message);
@@ -77,41 +77,47 @@ export async function PUT(
       updateData.endDate = new Date(updateData.endDate);
     }
 
-    // ถ้ามีการเปลี่ยนสถานะ อัปเดตสถานะห้องพักด้วย
-    if (updateData.status) {
-      if (updateData.status === 'CONFIRMED') {
-        await prisma.room.update({
-          where: { id: existingBooking.roomId },
-          data: { status: 'OCCUPIED' },
-        });
-      } else if (updateData.status === 'CANCELLED' || updateData.status === 'COMPLETED') {
-        await prisma.room.update({
-          where: { id: existingBooking.roomId },
-          data: { status: 'AVAILABLE' },
-        });
+    // อัปเดตการจองและสถานะห้องพักใน transaction
+    const booking = await prisma.$transaction(async (tx) => {
+      // ถ้ามีการเปลี่ยนสถานะ อัปเดตสถานะห้องพักด้วย
+      if (updateData.status) {
+        if (updateData.status === 'CONFIRMED') {
+          await tx.room.update({
+            where: { id: existingBooking.roomId },
+            data: { status: 'OCCUPIED' },
+          });
+        } else if (updateData.status === 'CANCELLED' || updateData.status === 'COMPLETED') {
+          await tx.room.update({
+            where: { id: existingBooking.roomId },
+            data: { status: 'AVAILABLE' },
+          });
+        }
       }
-    }
 
-    const booking = await prisma.booking.update({
-      where: { id },
-      data: updateData,
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            phone: true,
+      // อัปเดตการจอง
+      const updatedBooking = await tx.booking.update({
+        where: { id },
+        data: updateData,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              phone: true,
+            },
           },
-        },
-        room: {
-          include: {
-            dormitory: true,
+          room: {
+            include: {
+              dormitory: true,
+            },
           },
+          payments: true,
         },
-        payments: true,
-      },
+      });
+
+      return updatedBooking;
     });
 
     return successResponse(booking, 'อัปเดตข้อมูลการจองสำเร็จ');
@@ -136,16 +142,19 @@ export async function DELETE(
       return notFoundResponse('ไม่พบการจอง');
     }
 
-    // เปลี่ยนสถานะเป็น CANCELLED แทนการลบ
-    await prisma.booking.update({
-      where: { id },
-      data: { status: 'CANCELLED' },
-    });
+    // ยกเลิกการจองและอัปเดตสถานะห้องพักใน transaction
+    await prisma.$transaction(async (tx) => {
+      // เปลี่ยนสถานะเป็น CANCELLED แทนการลบ
+      await tx.booking.update({
+        where: { id },
+        data: { status: 'CANCELLED' },
+      });
 
-    // อัปเดตสถานะห้องพักเป็น AVAILABLE
-    await prisma.room.update({
-      where: { id: booking.roomId },
-      data: { status: 'AVAILABLE' },
+      // อัปเดตสถานะห้องพักเป็น AVAILABLE
+      await tx.room.update({
+        where: { id: booking.roomId },
+        data: { status: 'AVAILABLE' },
+      });
     });
 
     return successResponse(null, 'ยกเลิกการจองสำเร็จ');

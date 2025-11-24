@@ -50,21 +50,33 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // 4. การจองต่อวัน
-    const dailyBookings = await prisma.booking.groupBy({
-      by: ['createdAt'],
+    // 4. การจองต่อวัน - ดึงข้อมูลแล้วจัดกลุ่มเอง
+    const allBookingsInPeriod = await prisma.booking.findMany({
       where: {
         createdAt: {
           gte: startDate,
         },
       },
-      _count: {
+      select: {
         id: true,
+        createdAt: true,
       },
       orderBy: {
         createdAt: 'asc',
       },
     });
+
+    // จัดกลุ่มการจองตามวัน
+    const dailyBookingsMap = new Map<string, number>();
+    allBookingsInPeriod.forEach((booking) => {
+      const dateKey = booking.createdAt.toISOString().split('T')[0];
+      dailyBookingsMap.set(dateKey, (dailyBookingsMap.get(dateKey) || 0) + 1);
+    });
+
+    const dailyBookings = Array.from(dailyBookingsMap.entries()).map(([date, count]) => ({
+      date: new Date(date),
+      count,
+    }));
 
     // 5. สถิติการชำระเงินตาม method
     const paymentsByMethod = await prisma.payment.groupBy({
@@ -86,7 +98,7 @@ export async function GET(request: NextRequest) {
     // 6. อัตราการยกเลิกการจอง
     const totalBookingsInPeriod = bookingsInPeriod.length;
     const cancelledBookings = bookingsInPeriod.filter((b: any) => b.status === 'CANCELLED').length;
-    const cancellationRate = totalBookingsInPeriod > 0 
+    const cancellationRate = totalBookingsInPeriod > 0
       ? ((cancelledBookings / totalBookingsInPeriod) * 100).toFixed(2)
       : '0';
 
@@ -208,9 +220,9 @@ export async function GET(request: NextRequest) {
       unpaidAmount: totalUnpaidAmount,
       popularRooms: popularRoomsWithDetails,
       trends: {
-        bookingsPerDay: dailyBookings.map((item: any) => ({
-          date: item.createdAt,
-          count: item._count.id,
+        bookingsPerDay: dailyBookings.map((item) => ({
+          date: item.date,
+          count: item.count,
         })),
       },
     };

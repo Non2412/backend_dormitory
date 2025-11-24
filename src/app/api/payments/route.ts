@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse, notFoundResponse, serverErrorResponse, paginatedResponse } from '@/lib/response';
 import { createPaymentSchema } from '@/lib/validation';
@@ -15,18 +16,18 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where: any = {};
-    
+    const where: Prisma.PaymentWhereInput = {};
+
     if (userId) {
       where.userId = userId;
     }
-    
+
     if (bookingId) {
       where.bookingId = bookingId;
     }
-    
+
     if (status) {
-      where.status = status;
+      where.status = status as any;
     }
 
     const [payments, total] = await Promise.all([
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     const validation = createPaymentSchema.safeParse(body);
     if (!validation.success) {
       return errorResponse(validation.error.issues[0].message);

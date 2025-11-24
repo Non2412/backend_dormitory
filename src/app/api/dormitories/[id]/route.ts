@@ -25,7 +25,15 @@ export async function GET(
 
     const formattedDormitory = {
       ...dormitory,
-      facilities: dormitory.facilities ? JSON.parse(dormitory.facilities) : [],
+      facilities: (() => {
+        if (!dormitory.facilities) return [];
+        try {
+          return JSON.parse(dormitory.facilities);
+        } catch (error) {
+          console.error(`Error parsing facilities for dormitory ${id}:`, error);
+          return [];
+        }
+      })(),
     };
 
     return successResponse(formattedDormitory);
@@ -43,7 +51,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    
+
     const validation = updateDormitorySchema.safeParse(body);
     if (!validation.success) {
       return errorResponse(validation.error.issues[0].message);
@@ -58,7 +66,7 @@ export async function PUT(
     }
 
     const updateData: any = { ...validation.data };
-    
+
     if (updateData.facilities) {
       updateData.facilities = JSON.stringify(updateData.facilities);
     }
@@ -70,7 +78,15 @@ export async function PUT(
 
     const formattedDormitory = {
       ...dormitory,
-      facilities: dormitory.facilities ? JSON.parse(dormitory.facilities) : [],
+      facilities: (() => {
+        if (!dormitory.facilities) return [];
+        try {
+          return JSON.parse(dormitory.facilities);
+        } catch (error) {
+          console.error(`Error parsing facilities for dormitory ${id}:`, error);
+          return [];
+        }
+      })(),
     };
 
     return successResponse(formattedDormitory, 'อัปเดตข้อมูลหอพักสำเร็จ');

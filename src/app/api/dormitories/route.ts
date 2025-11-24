@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse, notFoundResponse, serverErrorResponse, paginatedResponse } from '@/lib/response';
 import { createDormitorySchema, updateDormitorySchema } from '@/lib/validation';
@@ -13,12 +14,12 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where: any = {};
-    
+    const where: Prisma.DormitoryWhereInput = {};
+
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { address: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search } },
+        { address: { contains: search } },
       ];
     }
 
@@ -44,10 +45,21 @@ export async function GET(request: NextRequest) {
     ]);
 
     // แปลง facilities จาก JSON string เป็น array
-    const formattedDormitories = dormitories.map((dorm: any) => ({
-      ...dorm,
-      facilities: dorm.facilities ? JSON.parse(dorm.facilities) : [],
-    }));
+    const formattedDormitories = dormitories.map((dorm: any) => {
+      let facilities = [];
+      if (dorm.facilities) {
+        try {
+          facilities = JSON.parse(dorm.facilities);
+        } catch (error) {
+          console.error(`Error parsing facilities for dormitory ${dorm.id}:`, error);
+          facilities = [];
+        }
+      }
+      return {
+        ...dorm,
+        facilities,
+      };
+    });
 
     return paginatedResponse(formattedDormitories, page, limit, total);
   } catch (error) {
@@ -60,7 +72,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     const validation = createDormitorySchema.safeParse(body);
     if (!validation.success) {
       return errorResponse(validation.error.issues[0].message);
@@ -80,7 +92,15 @@ export async function POST(request: NextRequest) {
 
     const formattedDormitory = {
       ...dormitory,
-      facilities: dormitory.facilities ? JSON.parse(dormitory.facilities) : [],
+      facilities: (() => {
+        if (!dormitory.facilities) return [];
+        try {
+          return JSON.parse(dormitory.facilities);
+        } catch (error) {
+          console.error(`Error parsing facilities:`, error);
+          return [];
+        }
+      })(),
     };
 
     return successResponse(formattedDormitory, 'สร้างหอพักสำเร็จ', 201);

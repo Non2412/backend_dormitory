@@ -1,0 +1,394 @@
+### ==========================================
+### Backend Dormitory API Testing (Updated)
+### ทดสอบการแก้ไขและฟีเจอร์ใหม่
+### ==========================================
+
+@baseUrl = http://localhost:3000/api
+
+### ==========================================
+### 🧪 TEST 1: สร้างข้อมูลพื้นฐาน
+### ==========================================
+
+### 1.1 สร้าง Admin User
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "admin@dormitory.com",
+  "password": "admin123",
+  "firstName": "ผู้ดูแล",
+  "lastName": "ระบบ",
+  "phone": "0812345678",
+  "role": "ADMIN"
+}
+
+### 1.2 สร้าง Student User
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "student1@test.com",
+  "password": "password123",
+  "firstName": "สมชาย",
+  "lastName": "ใจดี",
+  "phone": "0898765432",
+  "role": "STUDENT"
+}
+
+### 1.3 สร้าง Student User 2
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "student2@test.com",
+  "password": "password123",
+  "firstName": "สมหญิง",
+  "lastName": "รักดี",
+  "phone": "0887654321",
+  "role": "STUDENT"
+}
+
+### ==========================================
+### 🧪 TEST 2: ทดสอบ Type Safety & SQLite Compatibility
+### ==========================================
+
+### 2.1 ค้นหา Users (ทดสอบ SQLite search - ไม่มี mode: insensitive)
+GET {{baseUrl}}/users?search=สม
+
+### 2.2 Filter Users by Role (ทดสอบ Prisma.UserWhereInput)
+GET {{baseUrl}}/users?role=STUDENT
+
+### 2.3 Pagination (ทดสอบ validatePagination)
+GET {{baseUrl}}/users?page=1&limit=10
+
+### 2.4 ทดสอบ Pagination Limit (ควรจำกัดที่ 100)
+GET {{baseUrl}}/users?page=1&limit=200
+
+### ==========================================
+### 🧪 TEST 3: ทดสอบ Dormitories & JSON Parsing
+### ==========================================
+
+### 3.1 สร้าง Dormitory 1 (ทดสอบ JSON.stringify facilities)
+POST {{baseUrl}}/dormitories
+Content-Type: application/json
+
+{
+  "name": "หอพักดอกไม้",
+  "address": "123 ถนนพระราม 4 แขวงปทุมวัน เขตปทุมวัน กรุงเทพฯ 10330",
+  "description": "หอพักสะอาด ปลอดภัย มีรปภ.ตลอด 24 ชม.",
+  "imageUrl": "https://example.com/dorm1.jpg",
+  "facilities": ["WiFi", "ลิฟต์", "ที่จอดรถ", "เครื่องซักผ้า", "CCTV", "ตู้น้ำดื่ม"]
+}
+
+### 3.2 สร้าง Dormitory 2
+POST {{baseUrl}}/dormitories
+Content-Type: application/json
+
+{
+  "name": "หอพักดาวเรือง",
+  "address": "456 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110",
+  "description": "หอพักใกล้ BTS ใกล้ห้างสรรพสินค้า",
+  "facilities": ["WiFi ความเร็วสูง", "ฟิตเนส", "สระว่ายน้ำ", "ที่จอดรถ"]
+}
+
+### 3.3 ดึง Dormitories ทั้งหมด (ทดสอบ JSON.parse with error handling)
+GET {{baseUrl}}/dormitories
+
+### 3.4 ค้นหา Dormitories
+GET {{baseUrl}}/dormitories?search=ดอกไม้
+
+### ==========================================
+### 🧪 TEST 4: ทดสอบ Rooms
+### ==========================================
+
+### 4.1 สร้าง Room 101 (Single) - ใช้ dormitoryId จาก test 3.1
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "101",
+  "dormitoryId": "REPLACE_WITH_DORM_ID",
+  "type": "SINGLE",
+  "capacity": 1,
+  "price": 3000.50,
+  "floor": 1,
+  "status": "AVAILABLE",
+  "description": "ห้องเดี่ยว พร้อมระเบียง วิวสวน"
+}
+
+### 4.2 สร้าง Room 102 (Double)
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "102",
+  "dormitoryId": "REPLACE_WITH_DORM_ID",
+  "type": "DOUBLE",
+  "capacity": 2,
+  "price": 4500,
+  "floor": 1,
+  "description": "ห้องคู่ มีเครื่องปรับอากาศ 2 ตัว"
+}
+
+### 4.3 สร้าง Room 201 (Single)
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "201",
+  "dormitoryId": "REPLACE_WITH_DORM_ID",
+  "type": "SINGLE",
+  "capacity": 1,
+  "price": 3500,
+  "floor": 2,
+  "description": "ห้องเดี่ยว ชั้น 2"
+}
+
+### 4.4 ดึง Rooms ทั้งหมด
+GET {{baseUrl}}/rooms
+
+### 4.5 Filter Rooms (ทดสอบ Prisma.RoomWhereInput)
+GET {{baseUrl}}/rooms?status=AVAILABLE&type=SINGLE&minPrice=3000&maxPrice=4000
+
+### ==========================================
+### 🧪 TEST 5: ทดสอบ Transactions (Bookings)
+### ==========================================
+
+### 5.1 สร้าง Booking (ทดสอบ $transaction)
+# ใช้ userId จาก test 1.2 และ roomId จาก test 4.1
+POST {{baseUrl}}/bookings
+Content-Type: application/json
+
+{
+  "userId": "REPLACE_WITH_USER_ID",
+  "roomId": "REPLACE_WITH_ROOM_ID",
+  "startDate": "2025-12-01",
+  "endDate": "2026-05-31",
+  "totalAmount": 18000,
+  "notes": "ต้องการย้ายเข้าวันที่ 1 ธันวาคม"
+}
+
+### 5.2 ตรวจสอบว่า Room status เปลี่ยนเป็น RESERVED
+GET {{baseUrl}}/rooms/REPLACE_WITH_ROOM_ID
+
+### 5.3 ดึง Bookings ทั้งหมด
+GET {{baseUrl}}/bookings
+
+### 5.4 Update Booking เป็น CONFIRMED (ทดสอบ transaction)
+PUT {{baseUrl}}/bookings/REPLACE_WITH_BOOKING_ID
+Content-Type: application/json
+
+{
+  "status": "CONFIRMED"
+}
+
+### 5.5 ตรวจสอบว่า Room status เปลี่ยนเป็น OCCUPIED
+GET {{baseUrl}}/rooms/REPLACE_WITH_ROOM_ID
+
+### 5.6 สร้าง Booking อีกอัน (สำหรับทดสอบ cancel)
+POST {{baseUrl}}/bookings
+Content-Type: application/json
+
+{
+  "userId": "REPLACE_WITH_USER_ID",
+  "roomId": "REPLACE_WITH_ROOM_ID_2",
+  "startDate": "2025-12-01",
+  "totalAmount": 4500,
+  "notes": "ทดสอบการยกเลิก"
+}
+
+### 5.7 Cancel Booking (ทดสอบ transaction rollback)
+DELETE {{baseUrl}}/bookings/REPLACE_WITH_BOOKING_ID_2
+
+### 5.8 ตรวจสอบว่า Room status กลับเป็น AVAILABLE
+GET {{baseUrl}}/rooms/REPLACE_WITH_ROOM_ID_2
+
+### ==========================================
+### 🧪 TEST 6: ทดสอบ Payments
+### ==========================================
+
+### 6.1 สร้าง Payment
+POST {{baseUrl}}/payments
+Content-Type: application/json
+
+{
+  "bookingId": "REPLACE_WITH_BOOKING_ID",
+  "userId": "REPLACE_WITH_USER_ID",
+  "amount": 3000,
+  "paymentMethod": "BANK_TRANSFER",
+  "status": "PENDING",
+  "slipUrl": "https://example.com/slip123.jpg",
+  "notes": "ชำระค่าเช่าเดือนธันวาคม"
+}
+
+### 6.2 Update Payment เป็น COMPLETED
+PUT {{baseUrl}}/payments/REPLACE_WITH_PAYMENT_ID
+Content-Type: application/json
+
+{
+  "status": "COMPLETED"
+}
+
+### 6.3 ดึง Payments ทั้งหมด
+GET {{baseUrl}}/payments
+
+### 6.4 Filter Payments by status
+GET {{baseUrl}}/payments?status=COMPLETED
+
+### ==========================================
+### 🧪 TEST 7: ทดสอบ Dashboard Stats (แก้ไข groupBy)
+### ==========================================
+
+### 7.1 ดึงสถิติ 7 วันย้อนหลัง
+GET {{baseUrl}}/dashboard/stats?period=7
+
+### 7.2 ดึงสถิติ 30 วันย้อนหลัง (default)
+GET {{baseUrl}}/dashboard/stats
+
+### 7.3 ดึงสถิติ 90 วัน
+GET {{baseUrl}}/dashboard/stats?period=90
+
+### ==========================================
+### 🧪 TEST 8: ทดสอบ Error Handling
+### ==========================================
+
+### 8.1 สร้าง User ด้วย email ซ้ำ (ควร error 409)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "admin@dormitory.com",
+  "password": "test123",
+  "firstName": "Test",
+  "lastName": "User"
+}
+
+### 8.2 สร้าง Room ด้วย roomNumber ซ้ำในหอเดียวกัน (ควร error 409)
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "101",
+  "dormitoryId": "REPLACE_WITH_DORM_ID",
+  "type": "SINGLE",
+  "capacity": 1,
+  "price": 3000,
+  "floor": 1
+}
+
+### 8.3 สร้าง Booking ด้วย userId ที่ไม่มี (ควร error 404)
+POST {{baseUrl}}/bookings
+Content-Type: application/json
+
+{
+  "userId": "invalid_user_id",
+  "roomId": "REPLACE_WITH_ROOM_ID",
+  "startDate": "2025-12-01",
+  "totalAmount": 3000
+}
+
+### 8.4 สร้าง Booking สำหรับห้องที่ไม่ว่าง (ควร error 400)
+POST {{baseUrl}}/bookings
+Content-Type: application/json
+
+{
+  "userId": "REPLACE_WITH_USER_ID",
+  "roomId": "REPLACE_WITH_OCCUPIED_ROOM_ID",
+  "startDate": "2025-12-01",
+  "totalAmount": 3000
+}
+
+### 8.5 Get User ที่ไม่มี (ควร error 404)
+GET {{baseUrl}}/users/invalid_id
+
+### ==========================================
+### 🧪 TEST 9: ทดสอบ Validation
+### ==========================================
+
+### 9.1 สร้าง User ด้วย email ไม่ถูกต้อง
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "test123",
+  "firstName": "Test",
+  "lastName": "User"
+}
+
+### 9.2 สร้าง User ด้วย password สั้นเกินไป
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "password": "123",
+  "firstName": "Test",
+  "lastName": "User"
+}
+
+### 9.3 สร้าง Room ด้วยราคาติดลบ
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "999",
+  "dormitoryId": "REPLACE_WITH_DORM_ID",
+  "type": "SINGLE",
+  "capacity": 1,
+  "price": -1000,
+  "floor": 1
+}
+
+### 9.4 สร้าง Room ด้วย capacity = 0
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "999",
+  "dormitoryId": "REPLACE_WITH_DORM_ID",
+  "type": "SINGLE",
+  "capacity": 0,
+  "price": 3000,
+  "floor": 1
+}
+
+### ==========================================
+### 🧪 TEST 10: ทดสอบ Complex Queries
+### ==========================================
+
+### 10.1 ค้นหา Users ด้วย pagination
+GET {{baseUrl}}/users?page=1&limit=5&search=สม&role=STUDENT
+
+### 10.2 ค้นหา Rooms ด้วยหลายเงื่อนไข
+GET {{baseUrl}}/rooms?dormitoryId=REPLACE_WITH_DORM_ID&status=AVAILABLE&type=SINGLE&minPrice=3000&maxPrice=4000&page=1&limit=10
+
+### 10.3 ดึง Bookings ของ User คนหนึ่ง
+GET {{baseUrl}}/bookings?userId=REPLACE_WITH_USER_ID&status=CONFIRMED
+
+### 10.4 ดึง Payments ของ Booking
+GET {{baseUrl}}/payments?bookingId=REPLACE_WITH_BOOKING_ID
+
+### ==========================================
+### 📝 NOTES
+### ==========================================
+
+# ✅ การทดสอบที่ควรผ่าน:
+# 1. Type Safety - ไม่มี TypeScript errors
+# 2. SQLite Compatibility - search ทำงานโดยไม่มี mode: insensitive
+# 3. JSON Parsing - facilities แปลงถูกต้อง ไม่ crash
+# 4. Transactions - booking + room update เป็น atomic
+# 5. Error Handling - error messages ชัดเจน
+# 6. Validation - ตรวจสอบ input ก่อนบันทึก
+# 7. Pagination - จำกัดที่ 100 รายการ/หน้า
+# 8. Dashboard Stats - groupBy ทำงานถูกต้อง
+
+# 🔧 วิธีใช้งาน:
+# 1. เปิด VS Code
+# 2. ติดตั้ง REST Client extension
+# 3. เปิดไฟล์นี้
+# 4. คลิก "Send Request" เหนือแต่ละ request
+# 5. แทนที่ REPLACE_WITH_* ด้วย ID จริงจากผลลัพธ์
+
+# 🎯 ลำดับการทดสอบที่แนะนำ:
+# TEST 1 → TEST 2 → TEST 3 → TEST 4 → TEST 5 → TEST 6 → TEST 7 → TEST 8 → TEST 9 → TEST 10

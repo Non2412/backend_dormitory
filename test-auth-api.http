@@ -1,0 +1,292 @@
+### ==========================================
+### Authentication API Testing
+### ทดสอบระบบ Login, Register, JWT
+### ==========================================
+
+@baseUrl = http://localhost:3000/api
+@accessToken = YOUR_ACCESS_TOKEN_HERE
+@refreshToken = YOUR_REFRESH_TOKEN_HERE
+
+### ==========================================
+### 1. REGISTER (ลงทะเบียน)
+### ==========================================
+
+### 1.1 Register Student
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "student.test@example.com",
+  "password": "password123",
+  "firstName": "นักศึกษา",
+  "lastName": "ทดสอบ",
+  "phone": "0812345678"
+}
+
+### 1.2 Register Admin
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin.test@example.com",
+  "password": "admin123",
+  "firstName": "ผู้ดูแล",
+  "lastName": "ระบบ",
+  "phone": "0898765432",
+  "role": "ADMIN"
+}
+
+### 1.3 Register with duplicate email (ควร error 409)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "student.test@example.com",
+  "password": "password123",
+  "firstName": "Test",
+  "lastName": "User"
+}
+
+### 1.4 Register with invalid email (ควร error 400)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "password123",
+  "firstName": "Test",
+  "lastName": "User"
+}
+
+### 1.5 Register with short password (ควร error 400)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "123",
+  "firstName": "Test",
+  "lastName": "User"
+}
+
+### ==========================================
+### 2. LOGIN (เข้าสู่ระบบ)
+### ==========================================
+
+### 2.1 Login with correct credentials
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "student.test@example.com",
+  "password": "password123"
+}
+
+### 2.2 Login with wrong password (ควร error 401)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "student.test@example.com",
+  "password": "wrongpassword"
+}
+
+### 2.3 Login with non-existent email (ควร error 401)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "notexist@example.com",
+  "password": "password123"
+}
+
+### 2.4 Login Admin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin.test@example.com",
+  "password": "admin123"
+}
+
+### ==========================================
+### 3. GET CURRENT USER (ดึงข้อมูลผู้ใช้ปัจจุบัน)
+### ==========================================
+
+### 3.1 Get current user (ต้อง login ก่อน)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{accessToken}}
+
+### 3.2 Get current user without token (ควร error 401)
+GET {{baseUrl}}/auth/me
+
+### 3.3 Get current user with invalid token (ควร error 401)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer invalid_token_here
+
+### ==========================================
+### 4. UPDATE CURRENT USER
+### ==========================================
+
+### 4.1 Update current user info
+PUT {{baseUrl}}/auth/me
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "firstName": "นักศึกษา (แก้ไข)",
+  "lastName": "ทดสอบ (อัปเดต)",
+  "phone": "0887654321"
+}
+
+### ==========================================
+### 5. REFRESH TOKEN
+### ==========================================
+
+### 5.1 Refresh access token
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### 5.2 Refresh with invalid token (ควร error 401)
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "invalid_refresh_token"
+}
+
+### 5.3 Refresh without token (ควร error 400)
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{}
+
+### ==========================================
+### 6. LOGOUT
+### ==========================================
+
+### 6.1 Logout
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{accessToken}}
+
+### ==========================================
+### 7. PROTECTED ROUTES (ทดสอบ JWT Authentication)
+### ==========================================
+
+### 7.1 Access protected route WITH token
+GET {{baseUrl}}/users
+Authorization: Bearer {{accessToken}}
+
+### 7.2 Access protected route WITHOUT token (ควร error 401)
+GET {{baseUrl}}/users
+
+### 7.3 Create booking WITH token
+POST {{baseUrl}}/bookings
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "userId": "YOUR_USER_ID",
+  "roomId": "YOUR_ROOM_ID",
+  "startDate": "2025-12-01",
+  "totalAmount": 3000
+}
+
+### ==========================================
+### 8. ROLE-BASED ACCESS (ทดสอบ Authorization)
+### ==========================================
+
+### 8.1 Admin access (ต้องเป็น ADMIN)
+# ใช้ admin token
+GET {{baseUrl}}/users
+Authorization: Bearer YOUR_ADMIN_TOKEN
+
+### 8.2 Student trying to access admin route (ควร error 403)
+# ใช้ student token
+GET {{baseUrl}}/users
+Authorization: Bearer YOUR_STUDENT_TOKEN
+
+### ==========================================
+### 9. TOKEN EXPIRATION TEST
+### ==========================================
+
+### 9.1 Use expired token (ควร error 401)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer EXPIRED_TOKEN_HERE
+
+### ==========================================
+### 📝 WORKFLOW EXAMPLE
+### ==========================================
+
+### Step 1: Register
+# POST /api/auth/register
+# บันทึก accessToken และ refreshToken
+
+### Step 2: Login (ถ้ามี account แล้ว)
+# POST /api/auth/login
+# บันทึก accessToken และ refreshToken
+
+### Step 3: Access Protected Routes
+# ใส่ Authorization: Bearer {accessToken} ในทุก request
+
+### Step 4: Refresh Token (เมื่อ accessToken หมดอายุ)
+# POST /api/auth/refresh
+# ได้ accessToken ใหม่
+
+### Step 5: Logout
+# POST /api/auth/logout
+# ลบ tokens ฝั่ง client
+
+### ==========================================
+### 📊 EXPECTED RESPONSES
+### ==========================================
+
+### Register/Login Success:
+# {
+#   "success": true,
+#   "data": {
+#     "user": { id, email, firstName, lastName, role },
+#     "tokens": {
+#       "accessToken": "eyJhbGc...",
+#       "refreshToken": "eyJhbGc...",
+#       "tokenType": "Bearer",
+#       "expiresIn": "7d"
+#     }
+#   },
+#   "message": "ลงทะเบียนสำเร็จ"
+# }
+
+### Get Current User Success:
+# {
+#   "success": true,
+#   "data": {
+#     "id": "...",
+#     "email": "...",
+#     "firstName": "...",
+#     "lastName": "...",
+#     "role": "...",
+#     "bookings": [...],
+#     "payments": [...]
+#   }
+# }
+
+### Error Response:
+# {
+#   "success": false,
+#   "error": "error message"
+# }
+
+### ==========================================
+### 🔒 SECURITY NOTES
+### ==========================================
+
+# 1. เก็บ JWT_SECRET ใน .env (อย่า commit)
+# 2. ใช้ HTTPS ใน production
+# 3. ตั้งเวลา expiration ที่เหมาะสม
+# 4. Refresh token ควรมีอายุยาวกว่า access token
+# 5. ลบ token เมื่อ logout
+# 6. ใช้ httpOnly cookies สำหรับความปลอดภัยสูงสุด

@@ -1,0 +1,273 @@
+### ==========================================
+### Backend Dormitory API Testing
+### ==========================================
+
+@baseUrl = http://localhost:3000/api
+
+### ==========================================
+### USERS API
+### ==========================================
+
+### 1. Get all users
+GET {{baseUrl}}/users
+
+### 2. Create a new user (Student)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "student1@test.com",
+  "password": "password123",
+  "firstName": "สมชาย",
+  "lastName": "ใจดี",
+  "phone": "0812345678",
+  "role": "STUDENT"
+}
+
+### 3. Create admin user
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "admin@dormitory.com",
+  "password": "admin123",
+  "firstName": "ผู้ดูแล",
+  "lastName": "ระบบ",
+  "phone": "0898765432",
+  "role": "ADMIN"
+}
+
+### 4. Get user by ID (replace with actual ID)
+GET {{baseUrl}}/users/YOUR_USER_ID
+
+### 5. Update user
+PUT {{baseUrl}}/users/YOUR_USER_ID
+Content-Type: application/json
+
+{
+  "firstName": "สมชาย (แก้ไข)",
+  "phone": "0887654321"
+}
+
+### 6. Delete user
+DELETE {{baseUrl}}/users/YOUR_USER_ID
+
+### ==========================================
+### DORMITORIES API
+### ==========================================
+
+### 7. Get all dormitories
+GET {{baseUrl}}/dormitories
+
+### 8. Create dormitory
+POST {{baseUrl}}/dormitories
+Content-Type: application/json
+
+{
+  "name": "หอพักดอกไม้",
+  "address": "123 ถนนพระราม 4 แขวงปทุมวัน เขตปทุมวัน กรุงเทพฯ 10330",
+  "description": "หอพักสะอาด ปลอดภัย มีรปภ.ตลอด 24 ชม.",
+  "imageUrl": "https://example.com/dorm1.jpg",
+  "facilities": ["WiFi", "ลิฟต์", "ที่จอดรถ", "เครื่องซักผ้า", "CCTV", "ตู้น้ำดื่ม"]
+}
+
+### 9. Create another dormitory
+POST {{baseUrl}}/dormitories
+Content-Type: application/json
+
+{
+  "name": "หอพักดาวเรือง",
+  "address": "456 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110",
+  "description": "หอพักใกล้ BTS ใกล้ห้างสรรพสินค้า",
+  "facilities": ["WiFi ความเร็วสูง", "ฟิตเนส", "สระว่ายน้ำ", "ที่จอดรถ"]
+}
+
+### 10. Get dormitory by ID
+GET {{baseUrl}}/dormitories/YOUR_DORM_ID
+
+### 11. Update dormitory
+PUT {{baseUrl}}/dormitories/YOUR_DORM_ID
+Content-Type: application/json
+
+{
+  "description": "หอพักสะอาด ปลอดภัย มีรปภ.ตลอด 24 ชม. (อัปเดตใหม่)",
+  "facilities": ["WiFi", "ลิฟต์", "ที่จอดรถ", "เครื่องซักผ้า", "CCTV", "ตู้น้ำดื่ม", "ห้องฟิตเนส"]
+}
+
+### 12. Delete dormitory
+DELETE {{baseUrl}}/dormitories/YOUR_DORM_ID
+
+### ==========================================
+### ROOMS API
+### ==========================================
+
+### 13. Get all rooms
+GET {{baseUrl}}/rooms
+
+### 14. Get rooms with filters
+GET {{baseUrl}}/rooms?dormitoryId=YOUR_DORM_ID&status=AVAILABLE&minPrice=2000&maxPrice=5000
+
+### 15. Create room (Single)
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "101",
+  "dormitoryId": "YOUR_DORM_ID",
+  "type": "SINGLE",
+  "capacity": 1,
+  "price": 3000,
+  "floor": 1,
+  "status": "AVAILABLE",
+  "description": "ห้องเดี่ยว พร้อมระเบียง วิวสวน",
+  "imageUrl": "https://example.com/room101.jpg"
+}
+
+### 16. Create room (Double)
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "102",
+  "dormitoryId": "YOUR_DORM_ID",
+  "type": "DOUBLE",
+  "capacity": 2,
+  "price": 4500,
+  "floor": 1,
+  "description": "ห้องคู่ มีเครื่องปรับอากาศ 2 ตัว"
+}
+
+### 17. Get room by ID
+GET {{baseUrl}}/rooms/YOUR_ROOM_ID
+
+### 18. Update room
+PUT {{baseUrl}}/rooms/YOUR_ROOM_ID
+Content-Type: application/json
+
+{
+  "price": 3200,
+  "status": "AVAILABLE",
+  "description": "ห้องเดี่ยว พร้อมระเบียง วิวสวน (ปรับปรุงใหม่)"
+}
+
+### 19. Delete room
+DELETE {{baseUrl}}/rooms/YOUR_ROOM_ID
+
+### ==========================================
+### BOOKINGS API
+### ==========================================
+
+### 20. Get all bookings
+GET {{baseUrl}}/bookings
+
+### 21. Get bookings by user
+GET {{baseUrl}}/bookings?userId=YOUR_USER_ID
+
+### 22. Get bookings by status
+GET {{baseUrl}}/bookings?status=CONFIRMED
+
+### 23. Create booking
+POST {{baseUrl}}/bookings
+Content-Type: application/json
+
+{
+  "userId": "YOUR_USER_ID",
+  "roomId": "YOUR_ROOM_ID",
+  "startDate": "2025-12-01",
+  "endDate": "2026-05-31",
+  "totalAmount": 18000,
+  "notes": "ต้องการย้ายเข้าวันที่ 1 ธันวาคม"
+}
+
+### 24. Get booking by ID
+GET {{baseUrl}}/bookings/YOUR_BOOKING_ID
+
+### 25. Update booking status to CONFIRMED
+PUT {{baseUrl}}/bookings/YOUR_BOOKING_ID
+Content-Type: application/json
+
+{
+  "status": "CONFIRMED"
+}
+
+### 26. Cancel booking
+DELETE {{baseUrl}}/bookings/YOUR_BOOKING_ID
+
+### ==========================================
+### PAYMENTS API
+### ==========================================
+
+### 27. Get all payments
+GET {{baseUrl}}/payments
+
+### 28. Get payments by user
+GET {{baseUrl}}/payments?userId=YOUR_USER_ID
+
+### 29. Get payments by booking
+GET {{baseUrl}}/payments?bookingId=YOUR_BOOKING_ID
+
+### 30. Create payment
+POST {{baseUrl}}/payments
+Content-Type: application/json
+
+{
+  "bookingId": "YOUR_BOOKING_ID",
+  "userId": "YOUR_USER_ID",
+  "amount": 3000,
+  "paymentMethod": "BANK_TRANSFER",
+  "status": "PENDING",
+  "slipUrl": "https://example.com/slip123.jpg",
+  "notes": "ชำระค่าเช่าเดือนธันวาคม"
+}
+
+### 31. Get payment by ID
+GET {{baseUrl}}/payments/YOUR_PAYMENT_ID
+
+### 32. Update payment to COMPLETED
+PUT {{baseUrl}}/payments/YOUR_PAYMENT_ID
+Content-Type: application/json
+
+{
+  "status": "COMPLETED"
+}
+
+### 33. Delete payment
+DELETE {{baseUrl}}/payments/YOUR_PAYMENT_ID
+
+### ==========================================
+### SEARCH & FILTER EXAMPLES
+### ==========================================
+
+### 34. Search users by email
+GET {{baseUrl}}/users?search=test
+
+### 35. Filter users by role
+GET {{baseUrl}}/users?role=STUDENT
+
+### 36. Search dormitories
+GET {{baseUrl}}/dormitories?search=ดอกไม้
+
+### 37. Get available rooms only
+GET {{baseUrl}}/rooms?status=AVAILABLE
+
+### 38. Get rooms by type
+GET {{baseUrl}}/rooms?type=SINGLE
+
+### 39. Get pending bookings
+GET {{baseUrl}}/bookings?status=PENDING
+
+### 40. Get completed payments
+GET {{baseUrl}}/payments?status=COMPLETED
+
+### ==========================================
+### PAGINATION EXAMPLES
+### ==========================================
+
+### 41. Get first page (10 items)
+GET {{baseUrl}}/users?page=1&limit=10
+
+### 42. Get second page
+GET {{baseUrl}}/users?page=2&limit=10
+
+### 43. Get 5 items per page
+GET {{baseUrl}}/dormitories?page=1&limit=5

@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// โมเดลผู้ใช้งาน
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  role      UserRole @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  bookings  Booking[]
+  payments  Payment[]
+}
+
+enum UserRole {
+  STUDENT
+  ADMIN
+  STAFF
+}
+
+// โมเดลหอพัก
+model Dormitory {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  description String?
+  imageUrl    String?
+  facilities  String?  // JSON string เก็บสิ่งอำนวยความสะดวก
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  rooms       Room[]
+}
+
+// โมเดลห้องพัก
+model Room {
+  id           String     @id @default(cuid())
+  roomNumber   String
+  dormitoryId  String
+  type         RoomType
+  capacity     Int
+  price        Float
+  floor        Int
+  status       RoomStatus @default(AVAILABLE)
+  description  String?
+  imageUrl     String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  
+  dormitory    Dormitory  @relation(fields: [dormitoryId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
+  
+  @@unique([dormitoryId, roomNumber])
+}
+
+enum RoomType {
+  SINGLE
+  DOUBLE
+  TRIPLE
+  QUAD
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+  RESERVED
+}
+
+// โมเดลการจองห้อง
+model Booking {
+  id          String        @id @default(cuid())
+  userId      String
+  roomId      String
+  startDate   DateTime
+  endDate     DateTime?
+  status      BookingStatus @default(PENDING)
+  totalAmount Float
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room        Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  payments    Payment[]
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+// โมเดลการชำระเงิน
+model Payment {
+  id            String        @id @default(cuid())
+  bookingId     String
+  userId        String
+  amount        Float
+  paymentDate   DateTime      @default(now())
+  paymentMethod PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  slipUrl       String?       // URL ของสลิปการโอนเงิน
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CREDIT_CARD
+  PROMPTPAY
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}

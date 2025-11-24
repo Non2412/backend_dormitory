@@ -1,0 +1,98 @@
+// Prisma Schema for PostgreSQL (Vercel Deployment)
+// แก้ไขจาก SQLite เป็น PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"  // เปลี่ยนจาก sqlite
+  url      = env("DATABASE_URL")
+}
+
+// โมเดลผู้ใช้งาน
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  role      String @default("STUDENT")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  bookings  Booking[]
+  payments  Payment[]
+}
+
+// โมเดลหอพัก
+model Dormitory {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  description String?
+  imageUrl    String?
+  facilities  String?  // JSON string เก็บสิ่งอำนวยความสะดวก
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  rooms       Room[]
+}
+
+// โมเดลห้องพัก
+model Room {
+  id           String     @id @default(cuid())
+  roomNumber   String
+  dormitoryId  String
+  type         String
+  capacity     Int
+  price        Float
+  floor        Int
+  status       String @default("AVAILABLE")
+  description  String?
+  imageUrl     String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  
+  dormitory    Dormitory  @relation(fields: [dormitoryId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
+  
+  @@unique([dormitoryId, roomNumber])
+}
+
+// โมเดลการจองห้อง
+model Booking {
+  id          String        @id @default(cuid())
+  userId      String
+  roomId      String
+  startDate   DateTime
+  endDate     DateTime?
+  status      String @default("PENDING")
+  totalAmount Float
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room        Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  payments    Payment[]
+}
+
+// โมเดลการชำระเงิน
+model Payment {
+  id            String        @id @default(cuid())
+  bookingId     String
+  userId        String
+  amount        Float
+  paymentDate   DateTime      @default(now())
+  paymentMethod String
+  status        String @default("PENDING")
+  slipUrl       String?       // URL ของสลิปการโอนเงิน
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

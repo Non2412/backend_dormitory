@@ -1,0 +1,379 @@
+{
+    "info": {
+        "name": "Dormitory API - Utility Billing Tests",
+        "description": "ทดสอบระบบค่าน้ำ ค่าไฟ ค่าเช่า",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000",
+            "type": "string"
+        },
+        {
+            "key": "userId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "dormitoryId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "roomId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "bookingId",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "1. Setup",
+            "item": [
+                {
+                    "name": "1.1 Register User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 201\", function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Save userId\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.collectionVariables.set(\"userId\", jsonData.data.user.id);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"phone\": \"0812345678\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "1.2 Create Dormitory",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Save dormitoryId\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.collectionVariables.set(\"dormitoryId\", jsonData.data.id);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"หอพักทดสอบ\",\n  \"address\": \"123 ถนนสุขุมวิท กรุงเทพฯ\",\n  \"description\": \"หอพักสำหรับทดสอบระบบ\",\n  \"facilities\": [\"WiFi\", \"ที่จอดรถ\", \"ซักรีด\"]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/dormitories",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "dormitories"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "1.3 Create Room",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Save roomId\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.collectionVariables.set(\"roomId\", jsonData.data.id);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"dormitoryId\": \"{{dormitoryId}}\",\n  \"roomNumber\": \"101\",\n  \"type\": \"SINGLE\",\n  \"capacity\": 1,\n  \"price\": 3500,\n  \"floor\": 1,\n  \"status\": \"AVAILABLE\",\n  \"description\": \"ห้องเดี่ยว พร้อมเฟอร์นิเจอร์\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/rooms",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "1.4 Create Booking",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Save bookingId\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.collectionVariables.set(\"bookingId\", jsonData.data.id);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"roomId\": \"{{roomId}}\",\n  \"startDate\": \"2025-01-01\",\n  \"endDate\": \"2025-12-31\",\n  \"totalAmount\": 42000,\n  \"notes\": \"จองห้องพักประจำปี 2025\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/bookings",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "bookings"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "2. Payment Tests - Utility Billing",
+            "item": [
+                {
+                    "name": "2.1 Payment - ค่าเช่าอย่างเดียว",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"userId\": \"{{userId}}\",\n  \"amount\": 3500,\n  \"rentAmount\": 3500,\n  \"paymentMethod\": \"CASH\",\n  \"notes\": \"ชำระค่าเช่าเดือนมกราคม 2025\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/payments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "payments"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2.2 Payment - ค่าเช่า + ค่าน้ำ + ค่าไฟ",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"userId\": \"{{userId}}\",\n  \"amount\": 5200,\n  \"rentAmount\": 3500,\n  \"waterAmount\": 500,\n  \"electricAmount\": 1200,\n  \"waterUsage\": 50,\n  \"electricUsage\": 150,\n  \"paymentMethod\": \"BANK_TRANSFER\",\n  \"notes\": \"ชำระค่าเช่า + ค่าน้ำ + ค่าไฟ เดือนกุมภาพันธ์ 2025\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/payments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "payments"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2.3 Payment - ครบทุกรายการ",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"userId\": \"{{userId}}\",\n  \"amount\": 5500,\n  \"rentAmount\": 3500,\n  \"waterAmount\": 500,\n  \"electricAmount\": 1200,\n  \"otherAmount\": 300,\n  \"waterUsage\": 50,\n  \"electricUsage\": 150,\n  \"paymentMethod\": \"PROMPTPAY\",\n  \"slipUrl\": \"https://example.com/slip.jpg\",\n  \"notes\": \"ชำระครบทุกรายการ เดือนมีนาคม 2025\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/payments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "payments"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2.4 Payment - เฉพาะค่าน้ำ ค่าไฟ",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"userId\": \"{{userId}}\",\n  \"amount\": 1700,\n  \"waterAmount\": 500,\n  \"electricAmount\": 1200,\n  \"waterUsage\": 50,\n  \"electricUsage\": 150,\n  \"paymentMethod\": \"BANK_TRANSFER\",\n  \"notes\": \"ชำระค่าน้ำ ค่าไฟเพิ่มเติม\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/payments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "payments"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "3. Get Payments",
+            "item": [
+                {
+                    "name": "3.1 Get All Payments",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/payments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "payments"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "3.2 Get Payments by User",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/payments?userId={{userId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "payments"
+                            ],
+                            "query": [
+                                {
+                                    "key": "userId",
+                                    "value": "{{userId}}"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "3.3 Get Payments by Booking",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/payments?bookingId={{bookingId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "payments"
+                            ],
+                            "query": [
+                                {
+                                    "key": "bookingId",
+                                    "value": "{{bookingId}}"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

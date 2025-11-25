@@ -4,6 +4,8 @@ import type { NextRequest } from 'next/server';
 /**
  * CORS Middleware for Backend API
  * จัดการ CORS headers และ preflight requests (OPTIONS)
+ * 
+ * Note: ใน Next.js 16+ middleware ต้องอยู่ที่ root level (ไม่ใช่ใน src/)
  */
 export function middleware(request: NextRequest) {
     // กำหนด allowed origins

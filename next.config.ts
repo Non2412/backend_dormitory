@@ -15,19 +15,23 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Access-Control-Allow-Origin",
-            value: process.env.FRONTEND_URL || "*"
+            value: "*" // อนุญาตทุก origin (สำหรับ development)
           },
           {
             key: "Access-Control-Allow-Methods",
-            value: "GET,POST,PUT,DELETE,OPTIONS"
+            value: "GET, POST, PUT, DELETE, PATCH, OPTIONS"
           },
           {
             key: "Access-Control-Allow-Headers",
-            value: "Content-Type, Authorization"
+            value: "Content-Type, Authorization, X-Requested-With"
           },
           {
             key: "Access-Control-Allow-Credentials",
             value: "true"
+          },
+          {
+            key: "Access-Control-Max-Age",
+            value: "86400" // 24 hours
           }
         ],
       },
